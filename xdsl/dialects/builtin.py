@@ -707,28 +707,30 @@ class UnregisteredOp(Operation):
 class UnregisteredMLIRAttr(ParametrizedAttribute):
     name: str = "unregistered_attr"
 
-    attr_name = AttributeDef(StringAttr)
-    value = AttributeDef(StringAttr)
+    attr_name: ParameterDef[StringAttr]
+    value: ParameterDef[StringAttr]
 
     @staticmethod
     def get(name: str | StringAttr,
             value: str | StringAttr) -> UnregisteredMLIRAttr:
-        return UnregisteredMLIRAttr.build(StringAttr.build(name),
-                                          StringAttr.build(value))
+        return UnregisteredMLIRAttr(
+            [StringAttr.build(name),
+             StringAttr.build(value)])
 
 
 @irdl_attr_definition
 class UnregisteredMLIRType(ParametrizedAttribute):
     name: str = "unregistered_type"
 
-    attr_name = AttributeDef(StringAttr)
-    value = AttributeDef(StringAttr)
+    attr_name: ParameterDef[StringAttr]
+    value: ParameterDef[StringAttr]
 
     @staticmethod
     def get(name: str | StringAttr,
             value: str | StringAttr) -> UnregisteredMLIRAttr:
-        return UnregisteredMLIRAttr.build(StringAttr.build(name),
-                                          StringAttr.build(value))
+        return UnregisteredMLIRAttr(
+            [StringAttr.build(name),
+             StringAttr.build(value)])
 
 
 @irdl_op_definition

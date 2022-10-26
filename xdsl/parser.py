@@ -6,7 +6,8 @@ from xdsl.dialects.builtin import (
     DenseIntOrFPElementsAttr, Float16Type, Float32Type, Float64Type, FloatAttr,
     FunctionType, IndexType, IntegerType, OpaqueAttr, Signedness, StringAttr,
     FlatSymbolRefAttr, IntegerAttr, ArrayAttr, TensorType, UnitAttr,
-    UnrankedTensorType, UnregisteredOp, VectorType)
+    UnrankedTensorType, UnregisteredMLIRAttr, UnregisteredMLIRType,
+    UnregisteredOp, VectorType)
 from xdsl.irdl import Data
 from dataclasses import dataclass, field
 from typing import Any, TypeVar
@@ -457,6 +458,32 @@ class Parser:
             res.append(one)
         return res
 
+    def parse_balanced_parentheses(self) -> str:
+        parentheses = {"<": ">", "[": "]", "(": ")", "{": "}"}
+        stack = list[str]()
+        res = ""
+        # Ensure the first character is an opening parenthesis
+        char = self.get_char()
+        if char not in parentheses:
+            return ""
+
+        while True:
+            char = self.get_char()
+            if char is None:
+                raise ParserError(self._pos, "Unbalanced parentheses")
+            if char in parentheses:
+                stack.append(char)
+            elif char in parentheses.values():
+                if len(stack) == 0:
+                    raise ParserError(self._pos, "Unbalanced parentheses")
+                if parentheses[stack[-1]] != char:
+                    raise ParserError(self._pos, "Unbalanced parentheses")
+                stack.pop()
+            res += char
+            self._pos = self._pos.next_char_pos()
+            if len(stack) == 0:
+                return res
+
     def parse_optional_block_argument(
             self,
             skip_white_space: bool = True) -> tuple[str, Attribute] | None:
@@ -710,11 +737,12 @@ class Parser:
                 return attr
 
         # Then, we parse attributes/types with the generic format.
-
+        attribute_prefix = "!"
         if self.parse_optional_char("!") is None:
             if self.source == self.Source.MLIR:
                 if self.parse_optional_char("#") is None:
                     return None
+                attribute_prefix = "#"
             else:
                 return None
 
@@ -730,7 +758,18 @@ class Parser:
         if (self.source == self.Source.MLIR) and parse_with_default_format:
             raise ParserError(self._pos, "cannot parse generic MLIR attribute")
 
-        attr_def = self.ctx.get_attr(attr_def_name)
+        attr_def = self.ctx.get_optional_attr(attr_def_name)
+
+        if attr_def is None:
+            if self.source == self.Source.XDSL:
+                raise ParserError(self._pos,
+                                  f"unknown attribute {attr_def_name}")
+            if self.source == self.Source.MLIR:
+                content = self.parse_balanced_parentheses()
+                if attribute_prefix == "!":
+                    return UnregisteredMLIRType.get(attr_def_name, content)
+                else:
+                    return UnregisteredMLIRAttr.get(attr_def_name, content)
 
         # Attribute with default format
         if parse_with_default_format:
