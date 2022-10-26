@@ -52,6 +52,9 @@ class Builtin:
         self.ctx.register_op(ModuleOp)
         self.ctx.register_op(UnregisteredOp)
 
+        self.ctx.register_attr(UnregisteredMLIRAttr)
+        self.ctx.register_attr(UnregisteredMLIRType)
+
 
 @irdl_attr_definition
 class StringAttr(Data[str]):
@@ -698,6 +701,34 @@ class UnregisteredOp(Operation):
                                     result_types=res,
                                     regions=regs,
                                     attributes=attrs)
+
+
+@irdl_attr_definition
+class UnregisteredMLIRAttr(ParametrizedAttribute):
+    name: str = "unregistered_attr"
+
+    attr_name = AttributeDef(StringAttr)
+    value = AttributeDef(StringAttr)
+
+    @staticmethod
+    def get(name: str | StringAttr,
+            value: str | StringAttr) -> UnregisteredMLIRAttr:
+        return UnregisteredMLIRAttr.build(StringAttr.build(name),
+                                          StringAttr.build(value))
+
+
+@irdl_attr_definition
+class UnregisteredMLIRType(ParametrizedAttribute):
+    name: str = "unregistered_type"
+
+    attr_name = AttributeDef(StringAttr)
+    value = AttributeDef(StringAttr)
+
+    @staticmethod
+    def get(name: str | StringAttr,
+            value: str | StringAttr) -> UnregisteredMLIRAttr:
+        return UnregisteredMLIRAttr.build(StringAttr.build(name),
+                                          StringAttr.build(value))
 
 
 @irdl_op_definition
