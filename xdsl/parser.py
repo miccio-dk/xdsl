@@ -458,7 +458,7 @@ class Parser:
             res.append(one)
         return res
 
-    def parse_balanced_parentheses(self) -> str:
+    def parse_balanced_parentheses(self, affine: bool = True) -> str:
         parentheses = {"<": ">", "[": "]", "(": ")", "{": "}"}
         stack = list[str]()
         res = ""
@@ -471,6 +471,15 @@ class Parser:
             char = self.get_char()
             if char is None:
                 raise ParserError(self._pos, "Unbalanced parentheses")
+            if affine:
+                if self.get_char(2) == "->":
+                    res += "->"
+                    self._pos = self._pos.next_char_pos(2)
+                    continue
+                elif self.get_char(2) == ">=":
+                    res += ">="
+                    self._pos = self._pos.next_char_pos(2)
+                    continue
             if char in parentheses:
                 stack.append(char)
             elif char in parentheses.values():
@@ -1044,6 +1053,30 @@ class Parser:
                 return FunctionType.from_lists(inputs, outputs)
             output = self.parse_attribute()
             return FunctionType.from_lists(inputs, [output])
+
+        if self.parse_optional_char("@"):
+            ident = self.parse_alpha_num()
+            return FlatSymbolRefAttr.from_str(ident)
+
+        # memref attribute
+        if self.parse_optional_string("memref") is not None:
+            content = self.parse_balanced_parentheses()
+            return UnregisteredMLIRType.get("memref", content)
+
+        # array attribute
+        if self.parse_optional_string("array") is not None:
+            content = self.parse_balanced_parentheses()
+            return UnregisteredMLIRAttr.get("array", content)
+
+        # affine_map
+        if self.parse_optional_string("affine_map") is not None:
+            content = self.parse_balanced_parentheses()
+            return UnregisteredMLIRAttr.get("affine_map", content)
+
+        # affine_set
+        if self.parse_optional_string("affine_set") is not None:
+            content = self.parse_balanced_parentheses()
+            return UnregisteredMLIRAttr.get("affine_set", content)
 
         return None
 
