@@ -230,7 +230,7 @@ class Parser:
             if char == '\\':
                 if (next_pos := pos.next_char_pos()) is not None:
                     escaped = next_pos.get_char()
-                    if escaped in ['\\', 'n', 't', 'r', '"']:
+                    if escaped in ['\\', 'n', 't', 'r', '"', '0']:
                         self._pos = next_pos.next_char_pos()
                         continue
                     else:
