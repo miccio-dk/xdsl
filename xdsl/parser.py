@@ -663,15 +663,22 @@ class Parser:
         self.parse_char(">")
         return res
 
+    def parse_optional_boolean_literal(
+            self,
+            skip_white_space: bool = True) -> bool | None:
+        if self.parse_optional_string(
+                "true", skip_white_space=skip_white_space) is not None:
+            return True
+        if self.parse_optional_string(
+                "false", skip_white_space=skip_white_space) is not None:
+            return False
+
     def parse_optional_boolean_attribute(
             self,
             skip_white_space: bool = True) -> IntegerAttr[IntegerType] | None:
-        if self.parse_optional_string(
-                "true", skip_white_space=skip_white_space) is not None:
-            return IntegerAttr.from_int_and_width(1, 1)
-        if self.parse_optional_string(
-                "false", skip_white_space=skip_white_space) is not None:
-            return IntegerAttr.from_int_and_width(0, 1)
+        b = self.parse_optional_boolean_literal(skip_white_space=skip_white_space)
+        if b is not None:
+            return IntegerAttr.from_int_and_width(b, 1)
 
     def parse_optional_xdsl_builtin_attribute(self,
                                               skip_white_space: bool = True
@@ -1012,6 +1019,8 @@ class Parser:
                     return f
                 if (i := self.parse_optional_int_literal()) is not None:
                     return i
+                if (b := self.parse_optional_boolean_literal()) is not None:
+                    return b
                 return None
 
             value = self.parse_optional_nested_list(parse_num)
