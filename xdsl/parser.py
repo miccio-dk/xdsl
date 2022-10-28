@@ -273,9 +273,12 @@ class Parser:
                                    ) -> int | None:
         is_negative = self.parse_optional_char(
             "-", skip_white_space=skip_white_space)
+        pos = self._pos
         if (hex_literal := self.parse_optional_hexadecimal_int_literal(skip_white_space)):
             # Not sure if we want to support negative hex literals
             return -hex_literal if is_negative else hex_literal
+        else:
+            self._pos = pos
         res = self.parse_while(lambda char: char.isnumeric(),
                                skip_white_space=False)
         if len(res) == 0:

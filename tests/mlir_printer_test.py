@@ -219,7 +219,7 @@ def test_op_with_hex_attributes():
     """Test printing an operation with attributes."""
     print_as_mlir_and_compare(
         """any() [ "attr" = !data_attr<0x42> ]""",
-        """"any"() {"attr" = #data_attr<0x42>} : () -> ()""",
+        """"any"() {"attr" = #data_attr<66>} : () -> ()""",
     )
 
 def test_param_custom_format():
