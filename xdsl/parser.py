@@ -663,9 +663,9 @@ class Parser:
         self.parse_char(">")
         return res
 
-    def parse_optional_boolean_literal(
-            self,
-            skip_white_space: bool = True) -> bool | None:
+    def parse_optional_boolean_literal(self,
+                                       skip_white_space: bool = True
+                                       ) -> bool | None:
         if self.parse_optional_string(
                 "true", skip_white_space=skip_white_space) is not None:
             return True
@@ -676,7 +676,8 @@ class Parser:
     def parse_optional_boolean_attribute(
             self,
             skip_white_space: bool = True) -> IntegerAttr[IntegerType] | None:
-        b = self.parse_optional_boolean_literal(skip_white_space=skip_white_space)
+        b = self.parse_optional_boolean_literal(
+            skip_white_space=skip_white_space)
         if b is not None:
             return IntegerAttr.from_int_and_width(b, 1)
 
@@ -1011,8 +1012,16 @@ class Parser:
             return vector
 
         # dense attribute
+        loc = self._pos
         if self.parse_optional_string("dense"):
-            self.parse_char("<")
+            self.parse_balanced_parentheses()
+            self.parse_char(":")
+            self.parse_attribute()
+            new_loc = self._pos
+            assert loc is not None
+            assert new_loc is not None
+            content = self.str[loc.idx:new_loc.idx]
+            return UnregisteredMLIRAttr.get("dense", content)
 
             def parse_num() -> int | float | None:
                 if (f := self.parse_optional_float_literal()) is not None:
