@@ -265,7 +265,7 @@ class Parser:
                 lambda char: char.isnumeric() or char in hex_chars,
                 skip_white_space=False)
             if not len(res):
-                raise ParserError(self._pos, 'hex literal expected after 0x')
+                return None
             return int(res, base=16)
 
     def parse_optional_int_literal(self,
