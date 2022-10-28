@@ -256,11 +256,26 @@ class Parser:
             raise ParserError(self._pos, "string literal expected")
         return res
 
+    def parse_optional_hexadecimal_int_literal(self,
+                                               skip_white_space: bool = True
+                                               ) -> int | None:
+        if self.parse_optional_string('0x', skip_white_space):
+            hex_chars = set('ABCDEFabcdef')
+            res = self.parse_while(
+                lambda char: char.isnumeric() or char in hex_chars,
+                skip_white_space=False)
+            if not len(res):
+                raise ParserError(self._pos, 'hex literal expected after 0x')
+            return int(res, base=16)
+
     def parse_optional_int_literal(self,
                                    skip_white_space: bool = True
                                    ) -> int | None:
         is_negative = self.parse_optional_char(
             "-", skip_white_space=skip_white_space)
+        if (hex_literal := self.parse_optional_hexadecimal_int_literal(skip_white_space)):
+            # Not sure if we want to support negative hex literals
+            return -hex_literal if is_negative else hex_literal
         res = self.parse_while(lambda char: char.isnumeric(),
                                skip_white_space=False)
         if len(res) == 0:
@@ -283,6 +298,9 @@ class Parser:
                               skip_white_space=skip_white_space)
 
     def parse_float_literal(self, skip_white_space: bool = True) -> float:
+        if (hex_literal := self.parse_optional_hexadecimal_int_literal(skip_white_space)) is not None:
+            return float(hex_literal)
+
         # Parse the optional sign
         value = ""
         if self.parse_optional_char("+", skip_white_space=skip_white_space):
