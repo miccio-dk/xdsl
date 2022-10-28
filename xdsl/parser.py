@@ -956,6 +956,7 @@ class Parser:
                                       ) -> Attribute | None:
         if skip_white_space:
             self.skip_white_space()
+        loc = self._pos
 
         # index type
         if (index_type := self.parse_optional_mlir_index_type()) is not None:
@@ -1012,7 +1013,6 @@ class Parser:
             return vector
 
         # dense attribute
-        loc = self._pos
         if self.parse_optional_string("dense"):
             self.parse_balanced_parentheses()
             self.parse_char(":")
@@ -1074,6 +1074,12 @@ class Parser:
 
         if self.parse_optional_char("@"):
             ident = self.parse_alpha_num()
+            while self.parse_optional_string("::@") is not None:
+                self.parse_alpha_num()
+            assert loc is not None
+            assert self._pos is not None
+            return UnregisteredMLIRType.get("flatsymbolref",
+                                            self.str[loc.idx:self._pos.idx])
             return FlatSymbolRefAttr.from_str(ident)
 
         # memref attribute
