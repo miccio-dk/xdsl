@@ -8,6 +8,7 @@ from xdsl.dialects.builtin import (
     FlatSymbolRefAttr, IntegerAttr, ArrayAttr, TensorType, UnitAttr,
     UnrankedTensorType, UnregisteredMLIRAttr, UnregisteredMLIRType,
     UnregisteredOp, VectorType)
+from xdsl.dialects.cmath import ComplexType
 from xdsl.irdl import Data
 from dataclasses import dataclass, field
 from typing import Any, TypeVar
@@ -1032,6 +1033,12 @@ class Parser:
         # vector type
         if (vector := self.parse_optional_mlir_vector()) is not None:
             return vector
+
+        # complex
+        if self.parse_optional_string("complex<"):
+            t = self.parse_mlir_float_type()
+            self.parse_string(">")
+            return ComplexType([t])
 
         # dense attribute
         if self.parse_optional_string("dense"):
