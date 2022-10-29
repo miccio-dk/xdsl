@@ -1027,6 +1027,9 @@ class Parser:
             return ArrayAttr.from_list(contents)
 
         # tensor type
+        if self.parse_optional_string("tensor"):
+            value = self.parse_balanced_parentheses()
+            return UnregisteredMLIRAttr.get("tensor", f"tensor<{value}>")
         if (tensor := self.parse_optional_mlir_tensor()) is not None:
             return tensor
 
