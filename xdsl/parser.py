@@ -1034,6 +1034,14 @@ class Parser:
             self.parse_char("]")
             return ArrayAttr.from_list(contents)
 
+        # Attr dictionary
+        if self.peek_char("{"):
+            pos = self._pos
+            self.parse_op_attributes()
+            new_pos = self._pos
+            content = self.str[pos.idx:new_pos.idx]
+            return UnregisteredMLIRAttr.get("attr_dict", content)
+
         # tensor type
         if self.parse_optional_string("tensor"):
             value = self.parse_balanced_parentheses()
