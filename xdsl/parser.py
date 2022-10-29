@@ -2,7 +2,7 @@ from __future__ import annotations
 from xdsl.ir import (ParametrizedAttribute, SSAValue, Block, Callable,
                      Attribute, Operation, Region, BlockArgument, MLContext)
 from xdsl.dialects.builtin import (
-    AnyFloat, AnyTensorType, AnyUnrankedTensorType, AnyVectorType,
+    AnyFloat, AnyTensorType, AnyUnrankedTensorType, AnyVectorType, BFloat16Type,
     DenseIntOrFPElementsAttr, Float16Type, Float32Type, Float64Type, FloatAttr,
     FunctionType, IndexType, IntegerType, OpaqueAttr, Signedness, StringAttr,
     FlatSymbolRefAttr, IntegerAttr, ArrayAttr, TensorType, UnitAttr,
@@ -958,6 +958,8 @@ class Parser:
     def parse_optional_mlir_float_type(self,
                                        skip_white_space: bool = True
                                        ) -> AnyFloat | None:
+        if self.parse_optional_string("bf16") is not None:
+            return BFloat16Type()
         if self.parse_optional_string("f16") is not None:
             return Float16Type()
         if self.parse_optional_string("f32") is not None:
