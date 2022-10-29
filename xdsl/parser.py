@@ -567,14 +567,17 @@ class Parser:
         oldBBNames = self._blocks.copy()
         self._blocks = dict[str, Block]()
 
-        if self.peek_char('^'):
-            for block in self.parse_list(self.parse_optional_named_block,
-                                         delimiter=""):
-                region.add_block(block)
-        else:
+        # Parse the first block, that is optionally not anonymous
+        if self.peek_char('^') is None:
             region.add_block(Block())
             for op in self.parse_list(self.parse_optional_op, delimiter=""):
                 region.blocks[0].add_op(op)
+
+        # Parse the following blocks
+        for block in self.parse_list(self.parse_optional_named_block,
+                                         delimiter=""):
+            region.add_block(block)
+
         self.parse_char("}")
 
         self._ssaValues = oldSSAVals
@@ -808,6 +811,9 @@ class Parser:
                 if attribute_prefix == "!":
                     return UnregisteredMLIRType.get(attr_def_name, content)
                 else:
+                    if self.parse_optional_char(":") is not None:
+                        type = self.parse_attribute()
+                        return UnregisteredMLIRAttr.get(attr_def_name, content, type)
                     return UnregisteredMLIRAttr.get(attr_def_name, content)
 
         # Attribute with default format
@@ -1314,6 +1320,7 @@ class Parser:
             num_results: int,
             skip_white_space: bool = True) -> _OperationType:
         operands = self.parse_operands(skip_white_space=skip_white_space)
+        successors = self.parse_successors()
 
         regions = []
         if self.parse_optional_char("(") is not None:
@@ -1341,7 +1348,8 @@ class Parser:
         return op_type.create(operands=operands,
                               result_types=result_types,
                               attributes=attributes,
-                              regions=regions)
+                              regions=regions,
+                              successors=successors)
 
     def parse_optional_mlir_op(self,
                                skip_white_space: bool = True

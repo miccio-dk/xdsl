@@ -709,13 +709,15 @@ class UnregisteredMLIRAttr(ParametrizedAttribute):
 
     attr_name: ParameterDef[StringAttr]
     value: ParameterDef[StringAttr]
+    type: ParameterDef[NoneAttr | Attribute]
 
     @staticmethod
     def get(name: str | StringAttr,
-            value: str | StringAttr) -> UnregisteredMLIRAttr:
+            value: str | StringAttr,
+            type: NoneAttr | Attribute = NoneAttr()) -> UnregisteredMLIRAttr:
         return UnregisteredMLIRAttr(
             [StringAttr.build(name),
-             StringAttr.build(value)])
+             StringAttr.build(value), type])
 
 
 @irdl_attr_definition
@@ -727,8 +729,8 @@ class UnregisteredMLIRType(ParametrizedAttribute):
 
     @staticmethod
     def get(name: str | StringAttr,
-            value: str | StringAttr) -> UnregisteredMLIRAttr:
-        return UnregisteredMLIRAttr(
+            value: str | StringAttr) -> UnregisteredMLIRType:
+        return UnregisteredMLIRType(
             [StringAttr.build(name),
              StringAttr.build(value)])
 
