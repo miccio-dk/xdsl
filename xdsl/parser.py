@@ -1050,6 +1050,9 @@ class Parser:
             return tensor
 
         # vector type
+        if self.parse_optional_string("vector"):
+            value = self.parse_balanced_parentheses()
+            return UnregisteredMLIRAttr.get("vector", f"vector<{value}>")
         if (vector := self.parse_optional_mlir_vector()) is not None:
             return vector
 
