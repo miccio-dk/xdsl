@@ -42,6 +42,8 @@ class Builtin:
         self.ctx.register_attr(Float16Type)
         self.ctx.register_attr(Float32Type)
         self.ctx.register_attr(Float64Type)
+        self.ctx.register_attr(Float80Type)
+        self.ctx.register_attr(Float128Type)
         self.ctx.register_attr(FloatData)
         self.ctx.register_attr(FloatAttr)
         self.ctx.register_attr(IntegerType)
@@ -263,7 +265,20 @@ class Float64Type(ParametrizedAttribute, MLIRType):
 
 f64 = Float64Type()
 
-AnyFloat: TypeAlias = BFloat16Type | Float16Type | Float32Type | Float64Type
+class Float80Type(ParametrizedAttribute, MLIRType):
+    name = "f80"
+
+
+f80 = Float80Type()
+
+class Float128Type(ParametrizedAttribute, MLIRType):
+    name = "f128"
+
+
+f128 = Float128Type()
+
+
+AnyFloat: TypeAlias = BFloat16Type | Float16Type | Float32Type | Float64Type | Float80Type | Float128Type
 
 
 @irdl_attr_definition

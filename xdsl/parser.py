@@ -1,10 +1,11 @@
 from __future__ import annotations
+from types import NoneType
 from xdsl.ir import (ParametrizedAttribute, SSAValue, Block, Callable,
                      Attribute, Operation, Region, BlockArgument, MLContext)
 from xdsl.dialects.builtin import (
     AnyFloat, AnyTensorType, AnyUnrankedTensorType, AnyVectorType, BFloat16Type,
-    DenseIntOrFPElementsAttr, Float16Type, Float32Type, Float64Type, FloatAttr,
-    FunctionType, IndexType, IntegerType, OpaqueAttr, Signedness, StringAttr,
+    DenseIntOrFPElementsAttr, Float128Type, Float16Type, Float32Type, Float64Type, Float80Type, FloatAttr,
+    FunctionType, IndexType, IntegerType, NoneAttr, OpaqueAttr, Signedness, StringAttr,
     FlatSymbolRefAttr, IntegerAttr, ArrayAttr, TensorType, UnitAttr,
     UnrankedTensorType, UnregisteredMLIRAttr, UnregisteredMLIRType,
     UnregisteredOp, VectorType)
@@ -972,6 +973,10 @@ class Parser:
             return Float32Type()
         if self.parse_optional_string("f64") is not None:
             return Float64Type()
+        if self.parse_optional_string("f80") is not None:
+            return Float80Type()
+        if self.parse_optional_string("f128") is not None:
+            return Float128Type()
         return None
 
     def parse_mlir_float_type(self, skip_white_space: bool = True) -> AnyFloat:
@@ -987,6 +992,24 @@ class Parser:
         if skip_white_space:
             self.skip_white_space()
         loc = self._pos
+
+        # llvm type, this is because LLVM is already registered with a wrong parser
+        if (self.parse_optional_string("!llvm.struct") is not None):
+            content = self.parse_balanced_parentheses()
+            return UnregisteredMLIRType.get("llvm.struct", content)
+        
+        # none type
+        if (self.parse_optional_string("none")):
+            return NoneAttr()
+
+        # unit attr
+        if (self.parse_optional_string("unit")):
+            return UnitAttr()
+
+        # tuple
+        if (self.parse_optional_string("tuple")):
+            content = self.parse_balanced_parentheses()
+            return UnregisteredMLIRType.get("tuple", content)
 
         # index type
         if (index_type := self.parse_optional_mlir_index_type()) is not None:
@@ -1026,7 +1049,15 @@ class Parser:
         # string literal
         str_literal = self.parse_optional_str_literal()
         if str_literal is not None:
+            if self.parse_optional_char(":"):
+                attr = self.parse_attribute()
+                return UnregisteredMLIRAttr.get("string", str_literal, attr)
             return StringAttr.from_str(str_literal)
+
+        # loc attribute
+        if self.parse_optional_string("loc"):
+            content = self.parse_balanced_parentheses()
+            return UnregisteredMLIRAttr.get("loc", content)
 
         # Array attribute
         if self.parse_optional_char("["):
@@ -1057,6 +1088,9 @@ class Parser:
             return vector
 
         # complex
+        if self.parse_optional_string("complex"):
+            content = self.parse_balanced_parentheses()
+            return UnregisteredMLIRAttr.get("complex", f"complex<{content}>")
         if self.parse_optional_string("complex<"):
             t = self.parse_mlir_float_type()
             self.parse_string(">")
@@ -1134,9 +1168,13 @@ class Parser:
             return FunctionType.from_lists(inputs, [output])
 
         if self.parse_optional_char("@"):
-            ident = self.parse_alpha_num()
+            def parse_ref_name():
+                if ((name := self.parse_optional_str_literal()) is not None):
+                    return name
+                return self.parse_alpha_num()
+            ident = parse_ref_name()
             while self.parse_optional_string("::@") is not None:
-                self.parse_alpha_num()
+                parse_ref_name()
             assert loc is not None
             assert self._pos is not None
             return UnregisteredMLIRType.get("flatsymbolref",
