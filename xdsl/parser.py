@@ -1098,6 +1098,17 @@ class Parser:
 
             return DenseIntOrFPElementsAttr.from_list(type_attr, value)
 
+        # sparse attribute
+        if self.parse_optional_string("sparse"):
+            self.parse_balanced_parentheses()
+            self.parse_char(":")
+            self.parse_attribute()
+            new_loc = self._pos
+            assert loc is not None
+            assert new_loc is not None
+            content = self.str[loc.idx:new_loc.idx]
+            return UnregisteredMLIRAttr.get("sparse", content)
+
         # opaque attribute
         if self.parse_optional_string("opaque") is not None:
             self.parse_char("<")
