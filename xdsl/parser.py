@@ -1096,6 +1096,17 @@ class Parser:
             self.parse_string(">")
             return ComplexType([t])
 
+        # dense_resource attribute
+        if self.parse_optional_string("dense_resource"):
+            self.parse_balanced_parentheses()
+            self.parse_char(":")
+            self.parse_attribute()
+            new_loc = self._pos
+            assert loc is not None
+            assert new_loc is not None
+            content = self.str[loc.idx:new_loc.idx]
+            return UnregisteredMLIRAttr.get("dense_resource", content)
+
         # dense attribute
         if self.parse_optional_string("dense"):
             self.parse_balanced_parentheses()
