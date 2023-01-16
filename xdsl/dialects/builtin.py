@@ -342,26 +342,22 @@ class ArrayAttr(GenericData[List[_ArrayAttrT]]):
 
 AnyArrayAttr: TypeAlias = ArrayAttr[Attribute]
 
-_DictionaryAttrT = TypeVar("_DictionaryAttrT", bound=Attribute, covariant=True)
-
 
 @irdl_attr_definition
-class DictionaryAttr(GenericData[dict[str, _DictionaryAttrT]]):
+class DictionaryAttr(GenericData[dict[StringAttr, Attribute]]):
     name = "dictionary"
 
     @staticmethod
-    def parse_parameter(
-        parser: Parser,
-        parse_optional_attribute: Callable[[], _DictionaryAttrT | None]
-    ) -> dict[str, _DictionaryAttrT]:
+    def parse_parameter(parser: Parser) -> dict[StringAttr, Attribute]:
         parser.parse_char("{")
-        data = parser.parse_dictionary(parser.parse_str_literal,
-                                       parse_optional_attribute)
+        data = parser.parse_dictionary(
+            lambda: StringAttr.from_str(StringAttr.parse_parameter(parser)),
+            parser.parse_optional_attribute)
         parser.parse_char("}")
         return data
 
     @staticmethod
-    def print_parameter(data: dict[str, _DictionaryAttrT],
+    def print_parameter(data: dict[StringAttr, Attribute],
                         printer: Printer) -> None:
         printer.print_string("{")
         printer.print_dictionary(data, printer.print_attribute,
@@ -386,10 +382,8 @@ class DictionaryAttr(GenericData[dict[str, _DictionaryAttrT]]):
 
     @staticmethod
     @builder
-    def from_dict(
-        data: dict[str | StringAttr, _DictionaryAttrT]
-    ) -> DictionaryAttr[_DictionaryAttrT]:
-        to_add_data: dict[StringAttr, _DictionaryAttrT] = {}
+    def from_dict(data: dict[str | StringAttr, Attribute]) -> DictionaryAttr:
+        to_add_data: dict[StringAttr, Attribute] = {}
         for k, v in data.items():
             if not isinstance(k, StringAttr):
                 if isinstance(k, str):
@@ -403,9 +397,6 @@ class DictionaryAttr(GenericData[dict[str, _DictionaryAttrT]]):
             else:
                 to_add_data[k] = v
         return DictionaryAttr(to_add_data)
-
-
-AnyDictionaryAttr: TypeAlias = DictionaryAttr[Attribute]
 
 
 @irdl_attr_definition
