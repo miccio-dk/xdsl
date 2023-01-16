@@ -9,10 +9,11 @@ from xdsl.ir import (SSAValue, Block, Callable, Attribute, Operation, Region,
 
 from xdsl.dialects.builtin import (
     AnyFloat, AnyTensorType, AnyUnrankedTensorType, AnyVectorType,
-    DenseIntOrFPElementsAttr, Float16Type, Float32Type, Float64Type, FloatAttr,
-    FunctionType, IndexType, IntegerType, OpaqueAttr, Signedness, StringAttr,
-    FlatSymbolRefAttr, IntegerAttr, ArrayAttr, TensorType, UnitAttr,
-    UnrankedTensorType, UnregisteredOp, VectorType, DictionaryAttr)
+    DenseArrayBase, DenseIntOrFPElementsAttr, Float16Type, Float32Type,
+    Float64Type, FloatAttr, FunctionType, IndexType, IntegerType, OpaqueAttr,
+    Signedness, StringAttr, FlatSymbolRefAttr, IntegerAttr, ArrayAttr,
+    TensorType, UnitAttr, UnrankedTensorType, UnregisteredOp, VectorType,
+    DictionaryAttr)
 from xdsl.irdl import Data
 
 indentNumSpaces = 2
@@ -724,6 +725,10 @@ class Parser:
         if int_type := self.try_parse(parse_integer_type):
             return int_type
 
+        # Shorthand for DenseArrayBase
+        if (dense := self.parse_optional_mlir_dense_array_base()) is not None:
+            return dense
+
         return None
 
     def parse_optional_attribute(self,
@@ -929,6 +934,34 @@ class Parser:
             return typ
         raise ParserError(self._pos, "float type expected")
 
+    def parse_optional_mlir_dense_array_base(self,
+                                             skip_white_space: bool = True
+                                             ) -> DenseArrayBase | None:
+        if not self.parse_optional_string("array",
+                                          skip_white_space=skip_white_space):
+            return None
+
+        self.parse_char("<")
+        element_type = self.parse_attribute()
+
+        # Empty array
+        if self.parse_optional_char(">") is not None:
+            return DenseArrayBase.from_list(element_type, [])
+
+        self.parse_char(":")
+
+        def parse_optional_dense_array_value() -> int | float | None:
+            if (v := self.parse_optional_int_literal()) is not None:
+                return v
+            if (v := self.parse_optional_float_literal()) is not None:
+                return v
+            return None
+
+        values = self.parse_list(parse_optional_dense_array_value)
+        self.parse_char(">")
+
+        return DenseArrayBase.from_list(element_type, values)
+
     def parse_optional_mlir_attribute(self,
                                       skip_white_space: bool = True
                                       ) -> Attribute | None:
@@ -999,6 +1032,10 @@ class Parser:
         # vector type
         if (vector := self.parse_optional_mlir_vector()) is not None:
             return vector
+
+        # dense array
+        if (dense := self.parse_optional_mlir_dense_array_base()) is not None:
+            return dense
 
         # dense attribute
         if self.parse_optional_string("dense"):
