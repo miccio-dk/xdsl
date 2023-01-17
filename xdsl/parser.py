@@ -951,9 +951,9 @@ class Parser:
         self.parse_char(":")
 
         def parse_optional_dense_array_value() -> int | float | None:
-            if (v := self.parse_optional_int_literal()) is not None:
-                return v
             if (v := self.parse_optional_float_literal()) is not None:
+                return v
+            if (v := self.parse_optional_int_literal()) is not None:
                 return v
             return None
 
