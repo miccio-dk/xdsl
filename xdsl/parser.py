@@ -943,6 +943,10 @@ class Parser:
 
         self.parse_char("<")
         element_type = self.parse_attribute()
+        if not isinstance(element_type, IntegerType | AnyFloat):
+            raise ParserError(
+                self._pos, "dense array element type must be an integer or "
+                "floating point type")
 
         # Empty array
         if self.parse_optional_char(">") is not None:
