@@ -4,8 +4,9 @@ from dataclasses import dataclass
 import pytest
 
 from xdsl.ir import Attribute, Data, ParametrizedAttribute
-from xdsl.irdl import (AllOf, AnyAttr, AnyOf, AttrConstraint, BaseAttr, EqAttrConstraint,
-                       ParamAttrConstraint, ParameterDef, irdl_attr_definition)
+from xdsl.irdl import (AllOf, AnyAttr, AnyOf, AttrConstraint, BaseAttr,
+                       EqAttrConstraint, ParamAttrConstraint, ParameterDef,
+                       irdl_attr_definition)
 from xdsl.parser import Parser
 from xdsl.printer import Printer
 from xdsl.utils.exceptions import VerifyException
