@@ -50,14 +50,15 @@ jobs:
         path: llvm-project/build
         key: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
         restore-keys: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
-
         append-timestamp: false
 
     - name: Clang Setup
       if: steps.cache-binary.outputs.cache-hit != 'true'
-      uses: egor-tensin/setup-clang@v1 Viewe
+
+    - uses: egor-tensin/setup-clang@v1 Viewe
       if: steps.cache-binary.outputs.cache-hit != 'true'
-      uses: actions/checkout@v3
+
+    - uses: actions/checkout@v3
       with:
         repository: llvm/llvm-project.git
         path: llvm-project
