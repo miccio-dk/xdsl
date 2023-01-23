@@ -61,6 +61,7 @@ jobs:
       uses: lukka/get-cmake@9e431acfe656e5db66cd4930386328fce59cfaba
 
     - name: Checkout MLIR
+      if: steps.cache-binary.outputs.cache-hit != 'true'
       uses: actions/checkout@v3
       with:
         repository: llvm/llvm-project.git
