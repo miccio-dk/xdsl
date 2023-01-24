@@ -80,6 +80,14 @@ jobs:
     - name: Install Python Bindings Requirements
       run: pip install -r ${GITHUB_WORKSPACE}/llvm-project/mlir/python/requirements.txt
 
+    - name: Restore binary folder on reclone
+      if: steps.cache-binary.outputs.cache-hit == 'true' && steps.cache-requirements.outputs.cache-hit != true
+      uses: actions/cache/restore@v3
+      with:
+        path: llvm-project/build
+        key: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
+        restore-keys: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
+
     - name: MLIR Build Setup
       if: steps.cache-binary.outputs.cache-hit != 'true'
       run: |
