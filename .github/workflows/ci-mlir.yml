@@ -101,7 +101,7 @@ jobs:
           cmake --build . --target mlir-opt MLIRPythonModules
 
       - name: diag
-        run: ls -R ${GITHUB_WORKSPACE}/llvm-project/build/tools/mlir/pyhton_packages/mlir_core
+        run: ls -R ${GITHUB_WORKSPACE}/llvm-project/build/tools/mlir/python_packages/mlir_core
 
       - name: Test with pytest and generate code coverage
         run: |
