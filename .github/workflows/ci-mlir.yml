@@ -43,15 +43,6 @@ jobs:
     - name: Install the package locally
       run: pip install -e .[extras]
 
-    - name: Cache binaries
-      id: cache-binary
-      uses: actions/cache@v3
-      with:
-        path: llvm-project/build
-        key: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
-        restore-keys: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
-        append-timestamp: false
-
     - name: Clang Setup
       uses: egor-tensin/setup-clang@v1
 
@@ -73,6 +64,15 @@ jobs:
         mkdir -p llvm-project/build
         cd llvm-project/build
         cmake -G Ninja ../llvm -DPython3_EXECUTABLE=python3 -DLLVM_ENABLE_PROJECTS=mlir -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_ENABLE_LLD=ON -DMLIR_ENABLE_BINDINGS_PYTHON=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=ON
+
+   - name: Cache binaries
+      id: cache-binary
+      uses: actions/cache@v3
+      with:
+        path: llvm-project/build
+        key: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
+        restore-keys: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
+        append-timestamp: false
 
     - name: MLIR Build
       run: |
