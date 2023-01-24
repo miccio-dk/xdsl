@@ -80,6 +80,12 @@ jobs:
     - name: Install Python Bindings Requirements
       run: pip install -r ${GITHUB_WORKSPACE}/llvm-project/mlir/python/requirements.txt
 
+    - name: MLIR Build Setup
+      run: |
+        mkdir llvm-project/build
+        cd llvm-project/build
+        cmake -G Ninja ../llvm -DPython3_EXECUTABLE=python3 -DLLVM_ENABLE_PROJECTS=mlir -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_ENABLE_LLD=ON -DMLIR_ENABLE_BINDINGS_PYTHON=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=ON
+
     - name: Restore binary folder on reclone
       if: steps.cache-binary.outputs.cache-hit == 'true' && steps.cache-requirements.outputs.cache-hit != true
       uses: actions/cache/restore@v3
@@ -87,12 +93,6 @@ jobs:
         path: llvm-project/build
         key: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
         restore-keys: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
-
-    - name: MLIR Build Setup
-      run: |
-        mkdir llvm-project/build
-        cd llvm-project/build
-        cmake -G Ninja ../llvm -DPython3_EXECUTABLE=python3 -DLLVM_ENABLE_PROJECTS=mlir -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_ENABLE_LLD=ON -DMLIR_ENABLE_BINDINGS_PYTHON=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=ON
 
     - name: MLIR Build
       if: steps.cache-binary.outputs.cache-hit != 'true'
