@@ -19,9 +19,11 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10", "3.11"]
+
     env:
       LLVM_SYMBOLIZER_PATH: /usr/lib/llvm-11/bin/llvm-symbolizer
       MLIR-Version: 74992f4a5bb79e2084abdef406ef2e5aa2024368
+
     steps:
       - uses: actions/checkout@v3
 
@@ -76,14 +78,6 @@ jobs:
           path: llvm-project
           ref: ${{ env.MLIR-Version }}
 
-      - name: Restore binary folder on reclone
-        if: ${{ (steps.cache-binary.outputs.cache-hit == 'true') && (steps.cache-requirements.outputs.cache-hit != 'true') }}
-        uses: actions/cache/restore@v3
-        with:
-          path: llvm-project/build
-          key: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
-          restore-keys: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
-
       - name: Install Python Bindings Requirements
         run: pip install -r ${GITHUB_WORKSPACE}/llvm-project/mlir/python/requirements.txt
 
@@ -93,6 +87,14 @@ jobs:
           mkdir -p llvm-project/build
           cd llvm-project/build
           cmake -G Ninja ../llvm -DPython3_EXECUTABLE=python3 -DLLVM_ENABLE_PROJECTS=mlir -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_ENABLE_LLD=ON -DMLIR_ENABLE_BINDINGS_PYTHON=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=ON
+
+      - name: Restore binary folder on reclone
+        if: steps.cache-binary.outputs.cache-hit == 'true' && steps.cache-requirements.outputs.cache-hit != true
+        uses: actions/cache/restore@v3
+        with:
+          path: llvm-project/build
+          key: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
+          restore-keys: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
 
       - name: MLIR Build
         if: steps.cache-binary.outputs.cache-hit != 'true'
@@ -107,7 +109,7 @@ jobs:
         run: |
           cd xdsl
           # Add the MLIR Python bindings to the PYTHONPATH
-          export PYTHONPATH=$PYTHONPATH:${GITHUB_WORKSPACE}/llvm-project/build/tools/mlir/python_packages/mlir_core/
+          export PYTHONPATH=$PYTHONPATH:${GITHUB_WORKSPACE}/llvm-project/build/tools/mlir/python_packages/mlir_core
           pytest --cov --cov-config=.coveragerc tests
 
       - name: Execute lit tests
@@ -117,7 +119,7 @@ jobs:
           # Add mlir-opt to the path
           export PATH=$PATH:${GITHUB_WORKSPACE}/llvm-project/build/bin/
           # Add the MLIR Python bindings to the PYTHONPATH
-          export PYTHONPATH=$PYTHONPATH:${GITHUB_WORKSPACE}/llvm-project/build/tools/mlir/python_packages/mlir_core/
+          export PYTHONPATH=$PYTHONPATH:${GITHUB_WORKSPACE}/llvm-project/build/tools/mlir/python_packages/mlir_core
           lit -v tests/filecheck/ -DCOVERAGE -DEXEC_DIR=$(pwd)
 
       - name: Combine coverage data
