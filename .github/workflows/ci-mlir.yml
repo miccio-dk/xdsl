@@ -89,7 +89,6 @@ jobs:
         restore-keys: binaries-${{ runner.os }}-${{ env.MLIR-Version }}
 
     - name: MLIR Build Setup
-      if: steps.cache-binary.outputs.cache-hit != 'true'
       run: |
         mkdir llvm-project/build
         cd llvm-project/build
@@ -109,7 +108,7 @@ jobs:
         cd xdsl
         # Add the MLIR Python bindings to the PYTHONPATH
         export PYTHONPATH=$PYTHONPATH:${GITHUB_WORKSPACE}/llvm-project/build/tools/mlir/python_packages/mlir_core
-        #pytest --cov --cov-config=.coveragerc tests
+        pytest --cov --cov-config=.coveragerc tests
 
     - name: Execute lit tests
       run: |
